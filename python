@@ -1,0 +1,19 @@
+import akshare as ak
+import requests
+import os
+
+def daily_selection():
+    # 简单的选股逻辑：行业龙头且PE低
+    df = ak.stock_zh_a_spot_em()
+    selected = df[(df['市盈率-动态'] < 20) & (df['成交额'] > 1000000000)].head(5)
+    
+    msg = "📅 今日量化选股提醒:\n"
+    for _, row in selected.iterrows():
+        msg += f"- {row['名称']} ({row['代码']}): PE {row['市盈率-动态']}\n"
+    
+    # 推送至钉钉机器人 (Webhook)
+    webhook_url = os.getenv("DING_WEBHOOK")
+    requests.post(webhook_url, json={"msgtype": "text", "text": {"content": msg}})
+
+if __name__ == "__main__":
+    daily_selection()
